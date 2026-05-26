@@ -1,0 +1,117 @@
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum SubscriptionLevel {
+  basic
+  gold
+  platinum
+}
+
+enum GossipStatus {
+  pending
+  approved
+  rejected
+  removed
+}
+
+enum ReactionType {
+  approve
+  disapprove
+}
+
+model User {
+  id                        String            @id @default(uuid()) @db.Uuid
+  nickname                  String            @unique
+  fullName                  String            @map("full_name")
+  email                     String            @unique
+  password                  String
+  phone                     String
+  subscriptionLevel         SubscriptionLevel @default(basic) @map("subscription_level")
+  isSuperuser               Boolean           @default(false) @map("is_superuser")
+  emailVerified             Boolean           @default(false) @map("email_verified")
+  verificationCode          String?           @map("verification_code")
+  verificationCodeExpiresAt DateTime?         @map("verification_code_expires_at")
+  createdAt                 DateTime          @default(now()) @map("created_at")
+  updatedAt                 DateTime          @updatedAt @map("updated_at")
+
+  gossips          Gossip[]   @relation("AuthorGossips")
+  moderatedGossips Gossip[]   @relation("ModeratorGossips")
+  reactions        Reaction[]
+
+  @@map("users")
+}
+
+model Province {
+  id        String     @id @default(uuid()) @db.Uuid
+  name      String
+  districts District[]
+
+  @@map("provinces")
+}
+
+model District {
+  id             String         @id @default(uuid()) @db.Uuid
+  provinceId     String         @map("province_id") @db.Uuid
+  name           String
+  province       Province       @relation(fields: [provinceId], references: [id], onDelete: Cascade)
+  neighborhoods  Neighborhood[]
+
+  @@map("districts")
+}
+
+model Neighborhood {
+  id         String   @id @default(uuid()) @db.Uuid
+  districtId String   @map("district_id") @db.Uuid
+  name       String
+  district   District @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  gossips    Gossip[]
+
+  @@map("neighborhoods")
+}
+
+model Gossip {
+  id              String       @id @default(uuid()) @db.Uuid
+  userId          String       @map("user_id") @db.Uuid
+  neighborhoodId  String       @map("neighborhood_id") @db.Uuid
+  content         String       @db.VarChar(300)
+  status          GossipStatus @default(pending)
+  moderatorId     String?      @map("moderator_id") @db.Uuid
+  createdAt       DateTime     @default(now()) @map("created_at")
+  approvedAt      DateTime?    @map("approved_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  author       User          @relation("AuthorGossips", fields: [userId], references: [id], onDelete: Cascade)
+  moderator    User?         @relation("ModeratorGossips", fields: [moderatorId], references: [id], onDelete: SetNull)
+  neighborhood Neighborhood  @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
+  reactions    Reaction[]
+
+  @@index([userId])
+  @@index([neighborhoodId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("gossips")
+}
+
+model Reaction {
+  id           String       @id @default(uuid()) @db.Uuid
+  gossipId     String       @map("gossip_id") @db.Uuid
+  userId       String       @map("user_id") @db.Uuid
+  reactionType ReactionType @map("reaction_type")
+  createdAt    DateTime     @default(now()) @map("created_at")
+
+  gossip Gossip @relation(fields: [gossipId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([gossipId, userId])
+  @@index([gossipId])
+  @@index([userId])
+  @@map("reactions")
+}
