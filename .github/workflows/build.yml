@@ -3,6 +3,7 @@ name: Otomatik APK Olusturucu
 on:
   push:
     branches: [ "main" ] # main dalına her push yapıldığında tetiklenir
+  workflow_dispatch:
 
 jobs:
   build:
