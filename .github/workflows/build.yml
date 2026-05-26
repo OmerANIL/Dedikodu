@@ -1,0 +1,31 @@
+name: Otomatik APK Olusturucu
+
+on:
+  push:
+    branches: [ "main" ] # main dalına her push yapıldığında tetiklenir
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # GitHub'ın Linux sunucusunu kullan
+
+    steps:
+    - name: Kodları Klonla
+      uses: actions/checkout@v3
+
+    - name: Java (JDK 17) Kurulumu
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Gradle'a Çalıştırma İzni Ver
+      run: chmod +x ./gradlew
+
+    - name: APK'yı Derle (Debug Modu)
+      run: ./gradlew assembleDebug
+
+    - name: Oluşan APK'yı Sisteme Yükle
+      uses: actions/upload-artifact@v3
+      with:
+        name: Benim-Uygulamam-APK
+        path: app/build/outputs/apk/debug/app-debug.apk
