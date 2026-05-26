@@ -1,32 +1,34 @@
+cat << 'EOF' > .github/workflows/build.yml
 name: Otomatik APK Olusturucu
 
 on:
   push:
-    branches: [ "main" ] # main dalına her push yapıldığında tetiklenir
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest # GitHub'ın Linux sunucusunu kullan
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Kodları Klonla
+    - name: Kodlari Klonla
       uses: actions/checkout@v3
 
-    - name: Java (JDK 17) Kurulumu
+    - name: Java Kurulumu
       uses: actions/setup-java@v3
       with:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Gradle'a Çalıştırma İzni Ver
+    - name: Calistirma Izni Ver
       run: chmod +x ./gradlew
 
-    - name: APK'yı Derle (Debug Modu)
+    - name: APK Derle
       run: ./gradlew assembleDebug
 
-    - name: Oluşan APK'yı Sisteme Yükle
+    - name: Sisteme Yukle
       uses: actions/upload-artifact@v3
       with:
         name: Benim-Uygulamam-APK
         path: app/build/outputs/apk/debug/app-debug.apk
+EOF
