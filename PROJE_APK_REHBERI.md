@@ -77,3 +77,27 @@ eas build -p android --profile preview --local
    Uygulamayı telefona yüklediğinizde backend (Node.js sunucusu) ile konuşabilmesi için, telefonunuzun uygulamadaki API URL'sine ulaşabiliyor olması gerekir.
    Eğer backend sadece bilgisayarınızda (`localhost` veya `127.0.0.1`) çalışıyorsa, telefonunuz bilgisayarınızdaki backend'e erişemez.
    Bunun için ya bilgisayarınızın yerel ağdaki IP adresini kullanmalı (örn: `http://192.168.1.55:3000`) ya da backend'i bir sunucuya deploy etmelisiniz. (Uygulamanın `react_native_space` içindeki ilgili API config dosyasında bu URL'yi değiştirmeyi unutmayın!)
+
+---
+
+## Önemli: APK'da Login Olamıyorum (Ağ/API Hatası)
+
+Eğer APK'yı telefonunuza kurduğunuzda **Login olamıyorsanız** veya **hata alıyorsanız**, bunun %99 sebebi mobil uygulamanızın **Backend API'ye (Node.js)** bağlanamamasıdır.
+
+Mobil kodunuzda (`react_native_space/src/services/apiClient.ts`) varsayılan adres olarak şu yazılıdır:
+`https://58d7eb92c.na115.preview.abacusai.app`
+
+Ancak bu adres geçici bir sunucu adresi olabilir ve şu anda kapalı olabilir. Eğer backend'inizi (Node.js) kendi bilgisayarınızda (localhost'ta) çalıştırıyorsanız, telefonunuz `localhost` dediğinde bilgisayarınıza değil, telefonun kendi içine bakmaya çalışır.
+
+**Çözüm (Aynı WiFi ağında test etmek için):**
+1. Bilgisayarınızın yerel IP adresini öğrenin (Windows için cmd'ye `ipconfig` yazın, Mac/Linux için terminale `ifconfig` yazın. Genelde `192.168.1.X` veya `10.0.0.X` şeklindedir).
+2. Bilgisayarınızda `nodejs_space` içine girip backend'i çalıştırın (`npm run start` veya `npm run start:dev`). Uygulamanızın port `3000`'de çalıştığına emin olun.
+3. `react_native_space` klasörünün içinde bir `.env` dosyası oluşturun (eğer yoksa).
+4. İçine şunu yazın (kendi IP adresinizi yazarak):
+   ```
+   EXPO_PUBLIC_API_URL=http://192.168.1.X:3000
+   ```
+5. Bu değişikliği yaptıktan sonra APK'yı **yeniden derlemeniz (build etmeniz)** gerekir. Yeni APK'yı telefonunuza kurduğunuzda, uygulamanız bilgisayarınızdaki backend ile aynı Wi-Fi üzerinden konuşabilecektir ve Login işlemi çalışacaktır.
+
+**Eğer uygulamanızı internete açacaksanız (Canlı Ortam):**
+`nodejs_space` klasöründeki backend'inizi Render, Vercel, Heroku, AWS gibi bir sunucuya deploy etmeniz gerekir. Deploy ettikten sonra size verecekleri yeni API URL'ini `.env` dosyasına yazıp (`EXPO_PUBLIC_API_URL=https://sizin-api-adresiniz.com`), tekrar APK build almalısınız.
